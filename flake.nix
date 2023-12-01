@@ -26,6 +26,7 @@
       ];
       systems = [
         "x86_64-linux"
+        "aarch64-darwin"
       ];
       flake.hydraJobs.packages.x86_64-linux = self.packages.x86_64-linux;
       flake.hydraJobs.devShells.x86_64-linux = self.devShells.x86_64-linux;
