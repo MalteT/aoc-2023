@@ -2,7 +2,7 @@
 use std::{io::Write, num::NonZeroUsize};
 
 use clap::Parser;
-use rand::{seq::SliceRandom, thread_rng, Rng};
+use rand::{rngs::StdRng, seq::SliceRandom, thread_rng, Rng, SeedableRng};
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -14,12 +14,15 @@ struct Args {
     max_line: usize,
     #[arg(long, default_value_t = 0.1)]
     numbers_per_char: f32,
+    #[arg(long, short)]
+    seed: Option<u64>,
 }
 
 #[unix_sigpipe = "sig_dfl"]
 fn main() {
     let args = Args::parse();
-    let mut rng = thread_rng();
+    let seed = args.seed.unwrap_or_else(|| thread_rng().gen());
+    let mut rng = StdRng::seed_from_u64(seed);
     let mut stdout = std::io::stdout().lock();
 
     (0..args.lines).for_each(|_| {
@@ -28,6 +31,14 @@ fn main() {
             eprintln!("{why}");
         }
     });
+
+    eprintln!("Replicate with:");
+    eprintln!("---");
+    eprintln!(
+        "day-01-gen --lines {} --min-line {} --max-line {} --numbers_per_char {} --seed {}",
+        args.lines, args.min_line, args.max_line, args.numbers_per_char, seed
+    );
+    eprintln!("---");
 }
 
 fn generate_line<R: Rng>(rng: &mut R, args: &Args) -> String {
