@@ -34,6 +34,7 @@
       perSystem = {
         self',
         pkgs,
+        lib,
         config,
         system,
         ...
@@ -80,8 +81,13 @@
           pass_filenames = false;
         };
         # Packages
-        packages.day-01 = pkgs.callPackage ./nix/packages/day-01.nix {inherit rustPlatform;};
-        packages.day-01-gen = pkgs.callPackage ./nix/packages/day-01-gen.nix {inherit rustPlatform;};
+        packages = let
+          createPackage = file: _type: {
+            name = lib.strings.removeSuffix ".nix" (builtins.baseNameOf file);
+            value = pkgs.callPackage ./nix/packages/${file} {inherit rustPlatform;};
+          };
+        in
+          lib.attrsets.mapAttrs' createPackage (builtins.readDir ./nix/packages);
         # Shell
         devShells.default = pkgs.mkShell {
           name = "dev";
@@ -93,6 +99,7 @@
             config.treefmt.package
             rustToolchain
             pkgs.nil
+            pkgs.hyperfine
           ];
           RUST_LOG = "trace";
         };

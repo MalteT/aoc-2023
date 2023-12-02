@@ -3,4 +3,4 @@ resolver = "2"
 members = [ 
   "aoc-utils",
   "day-01", "day-01-gen"
-]
+, "day-02"]
