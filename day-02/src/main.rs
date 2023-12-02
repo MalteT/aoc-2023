@@ -1,4 +1,4 @@
-use aoc_utils::{open_by_lines, parse_args, Variant};
+use aoc_utils::{main, Lines};
 
 const TOTAL_DICE: Dice = Dice {
     red: 12,
@@ -24,6 +24,33 @@ impl Dice {
 struct Bag {
     id: usize,
     sets: Vec<Dice>,
+}
+
+struct Day02;
+main!(Day02, Lines);
+
+impl aoc_utils::Problem<Lines> for Day02 {
+    type Solution = usize;
+
+    fn solve_first(input: Lines) -> aoc_utils::Result<Self::Solution> {
+        let result = input
+            .map(Result::unwrap)
+            .map(Bag::parse)
+            .map(Bag::minimum_possible)
+            .map(Dice::power)
+            .sum();
+        Ok(result)
+    }
+
+    fn solve_second(input: Lines) -> aoc_utils::Result<Self::Solution> {
+        let result = input
+            .map(Result::unwrap)
+            .map(Bag::parse)
+            .filter(Bag::is_possible)
+            .map(|bag| bag.id)
+            .sum();
+        Ok(result)
+    }
 }
 
 impl Bag {
@@ -69,34 +96,4 @@ impl Bag {
             blue: acc.blue.max(set.blue),
         })
     }
-}
-
-fn main() -> std::io::Result<()> {
-    let args = parse_args();
-    match args.variant {
-        Variant::First => solve_first(args.file),
-        Variant::Second => solve_second(args.file),
-    }
-}
-
-fn solve_second(file: String) -> std::io::Result<()> {
-    let result: usize = open_by_lines(file)?
-        .map(Result::unwrap)
-        .map(Bag::parse)
-        .map(Bag::minimum_possible)
-        .map(Dice::power)
-        .sum();
-    println!("{result}");
-    Ok(())
-}
-
-fn solve_first(file: String) -> std::io::Result<()> {
-    let result: usize = open_by_lines(file)?
-        .map(Result::unwrap)
-        .map(Bag::parse)
-        .filter(Bag::is_possible)
-        .map(|bag| bag.id)
-        .sum();
-    println!("{result}");
-    Ok(())
 }

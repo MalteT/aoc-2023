@@ -3,7 +3,7 @@
   lib,
   ...
 }: let
-  package = "day-01-gen";
+  package = "{{{PROJECT}}}";
   src = with lib.sources;
     cleanSourceWith {
       name = "${package}-src";

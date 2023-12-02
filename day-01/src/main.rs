@@ -1,4 +1,49 @@
-use aoc_utils::{open_by_lines, parse_args, Variant};
+use aoc_utils::{main, Lines, Problem};
+
+struct Day01;
+
+impl Problem<Lines> for Day01 {
+    type Solution = usize;
+
+    fn solve_first(mut input: Lines) -> aoc_utils::Result<Self::Solution> {
+        input.try_fold(0usize, |sum, line| {
+            let line = line?;
+            let left = line
+                .chars()
+                .find(|char| char.is_ascii_digit())
+                .and_then(|char| char.to_digit(10))
+                .unwrap_or_else(|| panic!("a valid number in {line}"));
+            let right = line
+                .chars()
+                .rev()
+                .find(|char| char.is_ascii_digit())
+                .and_then(|char| char.to_digit(10))
+                .unwrap_or_else(|| panic!("a valid number in {line}"));
+            let pair = pair_digits((left as u8, right as u8));
+            Ok(sum + pair as usize)
+        })
+    }
+
+    fn solve_second(mut input: Lines) -> aoc_utils::Result<Self::Solution> {
+        input.try_fold(0usize, |sum, line| {
+            let line = line?;
+            let left = State::run(&line).unwrap_or_else(|| panic!("a number in {line}"));
+            let right = RevState::run(&line).unwrap_or_else(|| panic!("a number in {line}"));
+            let pair = pair_digits((left, right));
+            #[cfg(debug_assertions)]
+            {
+                let test = test(&line);
+                if test != pair {
+                    eprintln!("{test:>5} {pair:>5}");
+                    eprintln!("= {pair} < {line}");
+                }
+            }
+            Ok(sum + pair as usize)
+        })
+    }
+}
+
+main!(Day01, Lines);
 
 /// Possible transitions:
 ///  - `efghinorstuvwx`
@@ -231,57 +276,6 @@ impl RevState {
             }
         }
     }
-}
-
-fn main() -> std::io::Result<()> {
-    let args = parse_args();
-    match args.variant {
-        Variant::First => solve_first(args.file),
-        Variant::Second => solve_second(args.file),
-    }
-}
-
-fn solve_first(file: String) -> std::io::Result<()> {
-    let result = open_by_lines(file)?.try_fold(0usize, |sum, line| {
-        let line = line?;
-        let left = line
-            .chars()
-            .find(|char| char.is_ascii_digit())
-            .and_then(|char| char.to_digit(10))
-            .unwrap_or_else(|| panic!("a valid number in {line}"));
-        let right = line
-            .chars()
-            .rev()
-            .find(|char| char.is_ascii_digit())
-            .and_then(|char| char.to_digit(10))
-            .unwrap_or_else(|| panic!("a valid number in {line}"));
-        let pair = pair_digits((left as u8, right as u8));
-        Result::<_, std::io::Error>::Ok(sum + pair as usize)
-    })?;
-    println!("{result}");
-
-    Ok(())
-}
-
-fn solve_second(file: String) -> std::io::Result<()> {
-    let result = open_by_lines(file)?.try_fold(0usize, |sum, line| {
-        let line = line?;
-        let left = State::run(&line).unwrap_or_else(|| panic!("a number in {line}"));
-        let right = RevState::run(&line).unwrap_or_else(|| panic!("a number in {line}"));
-        let pair = pair_digits((left, right));
-        #[cfg(debug_assertions)]
-        {
-            let test = test(&line);
-            if test != pair {
-                eprintln!("{test:>5} {pair:>5}");
-                eprintln!("= {pair} < {line}");
-            }
-        }
-        Result::<_, std::io::Error>::Ok(sum + pair as usize)
-    })?;
-    println!("{result}");
-
-    Ok(())
 }
 
 fn test(line: &str) -> u8 {

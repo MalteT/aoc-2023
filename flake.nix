@@ -84,7 +84,7 @@
         packages = let
           createPackage = file: _type: {
             name = lib.strings.removeSuffix ".nix" (builtins.baseNameOf file);
-            value = pkgs.callPackage ./nix/packages/${file} {inherit rustPlatform;};
+            value = pkgs.callPackage ./nix/packages/${file} {inherit rustPlatform rustToolchain;};
           };
         in
           lib.attrsets.mapAttrs' createPackage (builtins.readDir ./nix/packages);
@@ -100,6 +100,7 @@
             rustToolchain
             pkgs.nil
             pkgs.hyperfine
+            self'.packages.init-new-day
           ];
           RUST_LOG = "trace";
         };

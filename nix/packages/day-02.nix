@@ -1,6 +1,7 @@
 {
   rustPlatform,
   lib,
+  ...
 }: let
   package = "day-02";
   src = with lib.sources;
