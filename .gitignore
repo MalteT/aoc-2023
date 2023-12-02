@@ -3,3 +3,6 @@ inputs
 .pre-commit-config.yaml
 target
 result*
+perf.data.old
+perf.data
+flamegraph.svg

@@ -278,6 +278,7 @@ impl RevState {
     }
 }
 
+#[cfg(debug_assertions)]
 fn test(line: &str) -> u8 {
     macro_rules! index {
         ($line:expr, $word:literal, $number:literal, $char:literal) => {

@@ -100,6 +100,7 @@
             rustToolchain
             pkgs.nil
             pkgs.hyperfine
+            pkgs.cargo-flamegraph
             self'.packages.init-new-day
           ];
           RUST_LOG = "trace";
