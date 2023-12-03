@@ -102,6 +102,7 @@
             pkgs.hyperfine
             pkgs.cargo-flamegraph
             self'.packages.init-new-day
+            self'.packages.perf
           ];
           RUST_LOG = "trace";
         };

@@ -1,4 +1,4 @@
-use std::{collections::HashMap, mem, ops::Range};
+use std::{collections::BTreeMap, mem, ops::Range};
 
 use aoc_utils::Bytes;
 use bit_set::BitSet;
@@ -8,7 +8,7 @@ type Position = usize;
 
 #[derive(Debug)]
 enum Token {
-    Number(Range<Position>, u16),
+    Number(Range<Position>, usize),
     Symbol(Position),
     Gear(Position),
     Newline,
@@ -30,10 +30,10 @@ enum Gear {
 
 impl Gear {
     // Add a new neighbor to this gear
-    fn register_neighbor(&mut self, num: u16) {
+    fn register_neighbor(&mut self, num: usize) {
         *self = match self {
-            Gear::None => Gear::One(num as usize),
-            Gear::One(curr) => Gear::Two(*curr * num as usize),
+            Gear::None => Gear::One(num),
+            Gear::One(curr) => Gear::Two(*curr * num),
             Gear::Two(_) => Gear::Invalid,
             Gear::Invalid => Gear::Invalid,
         }
@@ -59,7 +59,7 @@ struct SimpleAcc {
     /// Numbers that are not yet applied
     /// These will be removed as soon as a neighboring symbol is found.
     /// The range spans two additional tiles at the start and at the end!
-    numbers: LastAndCurr<Vec<(Range<usize>, u16)>>,
+    numbers: LastAndCurr<Vec<(Range<usize>, usize)>>,
 }
 
 /// Helper containing information about the current and the last line
@@ -91,10 +91,10 @@ struct GearAcc {
     /// Total sum of gear ratios
     sum: usize,
     /// Gears on this and the last line, complete with position information
-    gears: LastAndCurr<HashMap<Position, Gear>>,
+    gears: LastAndCurr<BTreeMap<Position, Gear>>,
     /// Numbers on this and the last line, with the range they're spanning.
     /// The range spans two additional tiles at the start and at the end!
-    numbers: LastAndCurr<Vec<(Range<Position>, u16)>>,
+    numbers: LastAndCurr<Vec<(Range<Position>, usize)>>,
 }
 
 /// A scanner for converting raw bytes into usable input
@@ -104,7 +104,7 @@ struct Scanner {
     line_position: usize,
     /// Current number + position of the first digit of the
     /// number we're currently scanning, [`None`] if we're not.
-    number: Option<(u16, Position)>,
+    number: Option<(usize, Position)>,
 }
 
 impl aoc_utils::Problem<Bytes> for Day03 {
@@ -150,10 +150,10 @@ fn scan_input(acc: &mut Scanner, byte: u8) -> Option<Vec<Token>> {
             match acc.number.as_mut() {
                 Some((num, _)) => {
                     *num *= 10;
-                    *num += (byte - b'0') as u16;
+                    *num += (byte - b'0') as usize;
                 }
                 None => {
-                    acc.number = Some(((byte - b'0') as u16, acc.line_position));
+                    acc.number = Some(((byte - b'0') as usize, acc.line_position));
                 }
             }
             acc.line_position += 1;
@@ -197,7 +197,7 @@ fn fold_entries_around_symbols(mut acc: SimpleAcc, token: Token) -> SimpleAcc {
         Token::Number(range, num) => {
             let symbol_on_last_line = range.clone().any(|pos| acc.symbols.last.contains(pos));
             if symbol_on_last_line || acc.symbols.curr.contains(range.start) {
-                acc.sum += num as usize;
+                acc.sum += num;
             } else {
                 acc.numbers.curr.push((range, num))
             }
@@ -207,7 +207,7 @@ fn fold_entries_around_symbols(mut acc: SimpleAcc, token: Token) -> SimpleAcc {
             let mut rest = Vec::with_capacity(acc.numbers.last.len());
             for (range, num) in acc.numbers.last {
                 if range.contains(&pos) {
-                    acc.sum += num as usize;
+                    acc.sum += num;
                 } else {
                     rest.push((range, num))
                 }
@@ -216,7 +216,7 @@ fn fold_entries_around_symbols(mut acc: SimpleAcc, token: Token) -> SimpleAcc {
             if let Some((range, _)) = acc.numbers.curr.last() {
                 if range.contains(&pos) {
                     let (_, num) = acc.numbers.curr.pop().unwrap();
-                    acc.sum += num as usize;
+                    acc.sum += num;
                 }
             }
             acc.symbols.curr.insert(pos);
@@ -244,9 +244,9 @@ fn fold_entries_around_gears(mut acc: GearAcc, token: Token) -> GearAcc {
                 if let Some(gear) = acc.gears.last.get_mut(&pos) {
                     gear.register_neighbor(num);
                 }
-                if let Some(gear) = acc.gears.curr.get_mut(&pos) {
-                    gear.register_neighbor(num);
-                }
+            }
+            if let Some(gear) = acc.gears.curr.get_mut(&range.start) {
+                gear.register_neighbor(num);
             }
             acc.numbers.curr.push((range, num));
             acc
@@ -258,7 +258,7 @@ fn fold_entries_around_gears(mut acc: GearAcc, token: Token) -> GearAcc {
                     gear.register_neighbor(*num)
                 }
             }
-            for (range, num) in &acc.numbers.curr {
+            if let Some((range, num)) = acc.numbers.curr.last() {
                 if range.contains(&pos) {
                     gear.register_neighbor(*num)
                 }
