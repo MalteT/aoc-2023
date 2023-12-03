@@ -124,3 +124,12 @@ impl Input for Args {
         Ok(args)
     }
 }
+
+pub type Bytes = std::io::Bytes<BufReader<File>>;
+impl Input for Bytes {
+    fn from_args(args: Args) -> Result<Self> {
+        let file = File::open(args.file)?;
+        let reader = BufReader::new(file);
+        Ok(std::io::Read::bytes(reader))
+    }
+}
