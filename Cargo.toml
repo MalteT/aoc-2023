@@ -5,7 +5,7 @@ members = [
   "day-01", "day-01-gen",
   "day-02", 
   "day-03"
-]
+, "day-04"]
 
 [profile.release]
 debug = true
