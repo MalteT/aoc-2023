@@ -1,6 +1,7 @@
 use std::{
     fs::File,
     io::{BufRead, BufReader},
+    num::ParseIntError,
 };
 
 #[macro_export]
@@ -18,8 +19,18 @@ use thiserror::Error;
 pub enum Error {
     #[error("IO: {_0}")]
     Io(#[from] std::io::Error),
+    #[error("Parsing a number")]
+    ParseInt(#[from] ParseIntError),
+    #[error("Invalid input: {_0:?}")]
+    Input(String),
     #[error("Error: {_0}")]
     Other(String),
+}
+
+impl Error {
+    pub fn input<S: Into<String>>(why: S) -> Self {
+        Error::Input(why.into())
+    }
 }
 
 pub type Result<T = (), E = Error> = std::result::Result<T, E>;
