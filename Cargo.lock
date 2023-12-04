@@ -144,6 +144,7 @@ name = "day-02"
 version = "0.1.0"
 dependencies = [
  "aoc-utils",
+ "itertools",
 ]
 
 [[package]]
@@ -152,6 +153,7 @@ version = "0.1.0"
 dependencies = [
  "aoc-utils",
  "bit-set",
+ "itertools",
 ]
 
 [[package]]

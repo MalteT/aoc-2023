@@ -1,4 +1,4 @@
-use aoc_utils::{main, Lines, Problem};
+use aoc_utils::{main, Error, Lines, Problem};
 
 struct Day01;
 
@@ -12,13 +12,13 @@ impl Problem<Lines> for Day01 {
                 .chars()
                 .find(|char| char.is_ascii_digit())
                 .and_then(|char| char.to_digit(10))
-                .unwrap_or_else(|| panic!("a valid number in {line}"));
+                .ok_or_else(|| Error::input(format!("No integer on line {line:?}")))?;
             let right = line
                 .chars()
                 .rev()
                 .find(|char| char.is_ascii_digit())
                 .and_then(|char| char.to_digit(10))
-                .unwrap_or_else(|| panic!("a valid number in {line}"));
+                .ok_or_else(|| Error::input(format!("No integer on line {line:?}")))?;
             let pair = pair_digits((left as u8, right as u8));
             Ok(sum + pair as usize)
         })
@@ -27,8 +27,10 @@ impl Problem<Lines> for Day01 {
     fn solve_second(mut input: Lines) -> aoc_utils::Result<Self::Solution> {
         input.try_fold(0usize, |sum, line| {
             let line = line?;
-            let left = State::run(&line).unwrap_or_else(|| panic!("a number in {line}"));
-            let right = RevState::run(&line).unwrap_or_else(|| panic!("a number in {line}"));
+            let left =
+                State::run(&line).ok_or_else(|| Error::input(format!("a number in {line}")))?;
+            let right =
+                RevState::run(&line).ok_or_else(|| Error::input(format!("a number in {line}")))?;
             let pair = pair_digits((left, right));
             #[cfg(debug_assertions)]
             {
@@ -42,8 +44,6 @@ impl Problem<Lines> for Day01 {
         })
     }
 }
-
-main!(Day01, Lines);
 
 /// Possible transitions:
 ///  - `efghinorstuvwx`
@@ -377,3 +377,5 @@ mod tests {
         assert_eq!(State::run("ninine"), Some(9));
     }
 }
+
+main!(Day01, Lines, "inputs-01-test-first" => 142, "inputs-01-test-second" => 281);

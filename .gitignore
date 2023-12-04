@@ -1,5 +1,4 @@
 .direnv
-inputs
 .pre-commit-config.yaml
 target
 result*

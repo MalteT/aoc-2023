@@ -10,6 +10,7 @@
       src = sourceByRegex ../.. [
         "^.*Cargo.(toml|lock)$"
         "^(aoc-utils|day-.*)(/src.*)?$"
+        "^inputs.*$"
       ];
       filter = cleanSourceFilter;
     };

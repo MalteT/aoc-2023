@@ -6,9 +6,30 @@ use std::{
 
 #[macro_export]
 macro_rules! main {
-    ($problem:ident, $input:ident) => {
+    ($problem:ident, $input:ident, $first_test_file:literal => $first_test_result:expr, $second_test_file:literal => $second_test_result:expr) => {
         fn main() -> aoc_utils::Result {
-            <$problem as aoc_utils::Solver<aoc_utils::$input>>::solve()
+            <$problem as aoc_utils::Problem<aoc_utils::$input>>::run_with_input_output()
+        }
+
+        #[test]
+        fn test_input_works() -> aoc_utils::Result {
+            // First
+            let file: &str = $first_test_file;
+            let path = String::from("../inputs/") + file;
+            let args = aoc_utils::Args::from_raw(aoc_utils::Variant::First, path);
+            let exp: <$problem as aoc_utils::Problem<aoc_utils::$input>>::Solution =
+                $first_test_result;
+            let solution = <$problem as aoc_utils::Problem<aoc_utils::$input>>::solve(args);
+            assert_eq!(exp, solution?);
+            // Second
+            let file: &str = $second_test_file;
+            let path = String::from("../inputs/") + file;
+            let args = aoc_utils::Args::from_raw(aoc_utils::Variant::Second, path);
+            let exp: <$problem as aoc_utils::Problem<aoc_utils::$input>>::Solution =
+                $second_test_result;
+            let solution = <$problem as aoc_utils::Problem<aoc_utils::$input>>::solve(args);
+            assert_eq!(exp, solution?);
+            Ok(())
         }
     };
 }
@@ -35,11 +56,38 @@ impl Error {
 
 pub type Result<T = (), E = Error> = std::result::Result<T, E>;
 
-pub trait Problem<Input> {
-    type Solution;
+pub trait Problem<I: Input> {
+    type Solution: std::fmt::Display;
     /// Run the solver with the given arguments.
-    fn solve_first(input: Input) -> Result<Self::Solution>;
-    fn solve_second(input: Input) -> Result<Self::Solution>;
+    fn solve_first(input: I) -> Result<Self::Solution>;
+    fn solve_second(input: I) -> Result<Self::Solution>;
+    fn solve(args: Args) -> Result<Self::Solution> {
+        match args.variant {
+            Variant::First => Self::solve_first(I::from_args(args)?),
+            Variant::Second => Self::solve_second(I::from_args(args)?),
+        }
+    }
+    fn run_with_input_output() -> Result {
+        let solution = Self::solve(Args {
+            file: std::env::args().nth(1).unwrap_or_else(|| {
+                eprintln!("> Reading from stdin..");
+                String::from("-")
+            }),
+            variant: {
+                let raw = std::env::args().nth(2).unwrap_or_else(|| {
+                    eprintln!("> No variant given, solving first puzzle");
+                    String::from("first")
+                });
+                match raw.as_str() {
+                    "first" => Variant::First,
+                    "second" => Variant::Second,
+                    _ => panic!("Unknown variant {raw:?}"),
+                }
+            },
+        })?;
+        println!("{solution}");
+        Ok(())
+    }
 }
 
 pub trait Input
@@ -49,13 +97,15 @@ where
     fn from_args(args: Args) -> Result<Self>;
 }
 
-pub trait Solver<I> {
-    fn solve() -> Result;
-}
-
 pub struct Args {
     pub variant: Variant,
     pub file: String,
+}
+
+impl Args {
+    pub fn from_raw(variant: Variant, file: String) -> Self {
+        Args { variant, file }
+    }
 }
 
 pub enum Lines {
@@ -68,32 +118,6 @@ pub enum Variant {
     Second,
 }
 
-fn parse_args() -> Args {
-    Args {
-        file: first_arg_as_file_name(),
-        variant: second_arg_as_variant(),
-    }
-}
-
-fn second_arg_as_variant() -> Variant {
-    let raw = std::env::args().nth(2).unwrap_or_else(|| {
-        eprintln!("> No variant given, solving first puzzle");
-        String::from("first")
-    });
-    match raw.as_str() {
-        "first" => Variant::First,
-        "second" => Variant::Second,
-        _ => panic!("Unknown variant {raw:?}"),
-    }
-}
-
-fn first_arg_as_file_name() -> String {
-    std::env::args().nth(1).unwrap_or_else(|| {
-        eprintln!("> Reading from stdin..");
-        String::from("-")
-    })
-}
-
 impl Iterator for Lines {
     type Item = std::io::Result<String>;
 
@@ -102,18 +126,6 @@ impl Iterator for Lines {
             Lines::Stdin(lines) => Iterator::next(lines),
             Lines::File(lines) => Iterator::next(lines),
         }
-    }
-}
-
-impl<O: std::fmt::Display, I: Input, T: Problem<I, Solution = O>> Solver<I> for T {
-    fn solve() -> Result {
-        let args = parse_args();
-        let output = match args.variant {
-            Variant::First => T::solve_first(I::from_args(args)?),
-            Variant::Second => T::solve_second(I::from_args(args)?),
-        }?;
-        println!("{output}");
-        Ok(())
     }
 }
 

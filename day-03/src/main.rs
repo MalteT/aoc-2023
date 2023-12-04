@@ -1,7 +1,9 @@
+#![feature(extract_if)]
 use std::{collections::BTreeMap, mem, ops::Range};
 
-use aoc_utils::Bytes;
+use aoc_utils::{Bytes, Result};
 use bit_set::BitSet;
+use itertools::Itertools;
 
 struct Day03;
 type Position = usize;
@@ -112,20 +114,18 @@ impl aoc_utils::Problem<Bytes> for Day03 {
 
     fn solve_first(input: Bytes) -> aoc_utils::Result<Self::Solution> {
         let acc = input
-            .map(Result::unwrap)
             .scan(Scanner::default(), scan_input)
-            .flatten()
-            .fold(SimpleAcc::default(), fold_entries_around_symbols);
-        Ok(acc.sum)
+            .flatten_ok()
+            .try_fold(SimpleAcc::default(), fold_entries_around_symbols);
+        Ok(acc?.sum)
     }
 
     fn solve_second(input: Bytes) -> aoc_utils::Result<Self::Solution> {
         let acc = input
-            .map(Result::unwrap)
             .scan(Scanner::default(), scan_input)
-            .flatten()
-            .fold(GearAcc::default(), fold_entries_around_gears);
-        Ok(acc.sum)
+            .flatten_ok()
+            .try_fold(GearAcc::default(), fold_entries_around_gears);
+        Ok(acc?.sum)
     }
 }
 
@@ -137,7 +137,7 @@ impl aoc_utils::Problem<Bytes> for Day03 {
 /// - `*`, a gear, pop the accumulated number and produce a gear
 /// - `\n`, a newline, pop the accumulated number and produce a newline
 /// - everything else will pop the number and produce a symbol marker
-fn scan_input(acc: &mut Scanner, byte: u8) -> Option<Vec<Token>> {
+fn scan_input(acc: &mut Scanner, byte: std::io::Result<u8>) -> Option<Result<Vec<Token>>> {
     let mut pop_scanned_number = || match acc.number.take() {
         Some((num, pos)) => vec![Token::Number(
             pos.saturating_sub(1)..acc.line_position + 1,
@@ -145,45 +145,50 @@ fn scan_input(acc: &mut Scanner, byte: u8) -> Option<Vec<Token>> {
         )],
         None => vec![],
     };
-    let res = match byte {
-        b'0'..=b'9' => {
-            match acc.number.as_mut() {
-                Some((num, _)) => {
-                    *num *= 10;
-                    *num += (byte - b'0') as usize;
+    match byte {
+        Ok(byte) => {
+            let res = match byte {
+                b'0'..=b'9' => {
+                    match acc.number.as_mut() {
+                        Some((num, _)) => {
+                            *num *= 10;
+                            *num += (byte - b'0') as usize;
+                        }
+                        None => {
+                            acc.number = Some(((byte - b'0') as usize, acc.line_position));
+                        }
+                    }
+                    acc.line_position += 1;
+                    vec![]
                 }
-                None => {
-                    acc.number = Some(((byte - b'0') as usize, acc.line_position));
+                b'.' => {
+                    let res = pop_scanned_number();
+                    acc.line_position += 1;
+                    res
                 }
-            }
-            acc.line_position += 1;
-            vec![]
+                b'*' => {
+                    let mut res = pop_scanned_number();
+                    res.push(Token::Gear(acc.line_position));
+                    acc.line_position += 1;
+                    res
+                }
+                b'\n' => {
+                    let mut res = pop_scanned_number();
+                    res.push(Token::Newline);
+                    acc.line_position = 0;
+                    res
+                }
+                _ => {
+                    let mut res = pop_scanned_number();
+                    res.push(Token::Symbol(acc.line_position));
+                    acc.line_position += 1;
+                    res
+                }
+            };
+            Some(Ok(res))
         }
-        b'.' => {
-            let res = pop_scanned_number();
-            acc.line_position += 1;
-            res
-        }
-        b'*' => {
-            let mut res = pop_scanned_number();
-            res.push(Token::Gear(acc.line_position));
-            acc.line_position += 1;
-            res
-        }
-        b'\n' => {
-            let mut res = pop_scanned_number();
-            res.push(Token::Newline);
-            acc.line_position = 0;
-            res
-        }
-        _ => {
-            let mut res = pop_scanned_number();
-            res.push(Token::Symbol(acc.line_position));
-            acc.line_position += 1;
-            res
-        }
-    };
-    Some(res)
+        Err(why) => Some(Err(why.into())),
+    }
 }
 
 /// Main part of the first problem.
@@ -192,8 +197,8 @@ fn scan_input(acc: &mut Scanner, byte: u8) -> Option<Vec<Token>> {
 /// - **Number**: Look for symbols in the last and current line that are adjacent to the number. If any is found, add it to the sum. If none is found, we'll keep track of the number and it's position
 /// - **Symbol**/**Gear**: Look for numbers in the last and current line that are adjacent to the symbol. If any is found, pop it from the list and add it to the sum
 /// - **Newline**: Move the current line to the last and start with a fresh current line. Numbers and symbols from the last line will be dropped as they are not needed anymore
-fn fold_entries_around_symbols(mut acc: SimpleAcc, token: Token) -> SimpleAcc {
-    match token {
+fn fold_entries_around_symbols(mut acc: SimpleAcc, token: Result<Token>) -> Result<SimpleAcc> {
+    match token? {
         Token::Number(range, num) => {
             let symbol_on_last_line = range.clone().any(|pos| acc.symbols.last.contains(pos));
             if symbol_on_last_line || acc.symbols.curr.contains(range.start) {
@@ -201,31 +206,31 @@ fn fold_entries_around_symbols(mut acc: SimpleAcc, token: Token) -> SimpleAcc {
             } else {
                 acc.numbers.curr.push((range, num))
             }
-            acc
+            Ok(acc)
         }
         Token::Symbol(pos) | Token::Gear(pos) => {
-            let mut rest = Vec::with_capacity(acc.numbers.last.len());
-            for (range, num) in acc.numbers.last {
-                if range.contains(&pos) {
+            let mut idx = 0;
+            while idx < acc.numbers.last.len() {
+                if acc.numbers.last[idx].0.contains(&pos) {
+                    let (_, num) = acc.numbers.last.remove(idx);
                     acc.sum += num;
                 } else {
-                    rest.push((range, num))
+                    idx += 1;
                 }
             }
-            acc.numbers.last = rest;
-            if let Some((range, _)) = acc.numbers.curr.last() {
+            if let Some((range, num)) = acc.numbers.curr.last() {
                 if range.contains(&pos) {
-                    let (_, num) = acc.numbers.curr.pop().unwrap();
                     acc.sum += num;
+                    acc.numbers.curr.pop();
                 }
             }
             acc.symbols.curr.insert(pos);
-            acc
+            Ok(acc)
         }
         Token::Newline => {
             acc.numbers.push_newline();
             acc.symbols.push_newline();
-            acc
+            Ok(acc)
         }
     }
 }
@@ -237,8 +242,8 @@ fn fold_entries_around_symbols(mut acc: SimpleAcc, token: Token) -> SimpleAcc {
 /// - **Gear**: Look for numbers in the last and current line that are adjacent and push the number to this. Remember the gear for future numbers.
 /// - **Newline**: Add all valid gears from the last line to the sum and replace it with the current line. Start with a fresh current line.
 /// - **Symbol**: *ignore*
-fn fold_entries_around_gears(mut acc: GearAcc, token: Token) -> GearAcc {
-    match token {
+fn fold_entries_around_gears(mut acc: GearAcc, token: Result<Token>) -> Result<GearAcc> {
+    match token? {
         Token::Number(range, num) => {
             for pos in range.clone() {
                 if let Some(gear) = acc.gears.last.get_mut(&pos) {
@@ -249,7 +254,7 @@ fn fold_entries_around_gears(mut acc: GearAcc, token: Token) -> GearAcc {
                 gear.register_neighbor(num);
             }
             acc.numbers.curr.push((range, num));
-            acc
+            Ok(acc)
         }
         Token::Gear(pos) => {
             let mut gear = Gear::default();
@@ -264,9 +269,9 @@ fn fold_entries_around_gears(mut acc: GearAcc, token: Token) -> GearAcc {
                 }
             }
             acc.gears.curr.insert(pos, gear);
-            acc
+            Ok(acc)
         }
-        Token::Symbol(_) => acc,
+        Token::Symbol(_) => Ok(acc),
         Token::Newline => {
             acc.sum += acc
                 .gears
@@ -276,9 +281,9 @@ fn fold_entries_around_gears(mut acc: GearAcc, token: Token) -> GearAcc {
                 .sum::<usize>();
             acc.gears.push_newline();
             acc.numbers.push_newline();
-            acc
+            Ok(acc)
         }
     }
 }
 
-aoc_utils::main!(Day03, Bytes);
+aoc_utils::main!(Day03, Bytes, "inputs-03-test" => 4361, "inputs-03-test" => 467835);

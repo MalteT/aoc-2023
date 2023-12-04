@@ -1,4 +1,5 @@
-use aoc_utils::{main, Lines};
+use aoc_utils::{main, Lines, Result};
+use itertools::Itertools;
 
 const TOTAL_DICE: Dice = Dice {
     red: 12,
@@ -27,34 +28,30 @@ struct Bag {
 }
 
 struct Day02;
-main!(Day02, Lines);
 
 impl aoc_utils::Problem<Lines> for Day02 {
     type Solution = usize;
 
     fn solve_first(input: Lines) -> aoc_utils::Result<Self::Solution> {
-        let result = input
-            .map(Result::unwrap)
+        input
             .map(Bag::parse)
-            .map(Bag::minimum_possible)
-            .map(Dice::power)
-            .sum();
-        Ok(result)
+            .filter_ok(Bag::is_possible)
+            .map_ok(|bag| bag.id)
+            .try_fold(0_usize, |sum, res| Ok(sum + res?))
     }
 
     fn solve_second(input: Lines) -> aoc_utils::Result<Self::Solution> {
-        let result = input
-            .map(Result::unwrap)
+        input
             .map(Bag::parse)
-            .filter(Bag::is_possible)
-            .map(|bag| bag.id)
-            .sum();
-        Ok(result)
+            .map_ok(Bag::minimum_possible)
+            .map_ok(Dice::power)
+            .try_fold(0_usize, |sum, res| Ok(sum + res?))
     }
 }
 
 impl Bag {
-    pub fn parse<S: AsRef<str>>(raw: S) -> Self {
+    pub fn parse<S: AsRef<str>>(raw: std::io::Result<S>) -> Result<Self> {
+        let raw = raw?;
         let raw = raw.as_ref();
         let (head, body) = raw.split_once(':').expect("a colon");
         let id = head
@@ -80,7 +77,7 @@ impl Bag {
                 dice
             })
             .collect();
-        Self { id, sets }
+        Ok(Self { id, sets })
     }
     pub fn is_possible(&self) -> bool {
         self.sets.iter().all(|set| {
@@ -97,3 +94,5 @@ impl Bag {
         })
     }
 }
+
+main!(Day02, Lines, "inputs-02-test" => 8, "inputs-02-test" => 2286);
