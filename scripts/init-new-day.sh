@@ -14,7 +14,3 @@ pushd "$(git rev-parse --show-toplevel)"
 cargo init --bin "$project_name"
 cargo add --package "$project_name" --path aoc-utils
 cp template/src/main.rs "$project_name/src/main.rs"
-# Create new nix package
-cp template/package.nix "nix/packages/${project_name}.nix"
-sed "s/{{{PROJECT}}}/${project_name}/g" -i "nix/packages/${project_name}.nix"
-

@@ -1,9 +1,9 @@
 {
   rustPlatform,
   lib,
+  package,
   ...
 }: let
-  package = "{{{PROJECT}}}";
   src = with lib.sources;
     cleanSourceWith {
       name = "${package}-src";
@@ -23,6 +23,10 @@ in
     inherit src;
 
     cargoBuildFlags = [
+      "--package ${pkgConfig.package.name}"
+    ];
+
+    cargoTestFlags = [
       "--package ${pkgConfig.package.name}"
     ];
 

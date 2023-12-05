@@ -14,4 +14,4 @@ impl aoc_utils::Problem<Lines> for DayXX {
     }
 }
 
-aoc_utils::main!(DayXX, Lines);
+aoc_utils::main!(DayXX, Lines, "inputs-xx" => 0, "inputs-xx" => 0);

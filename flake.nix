@@ -82,12 +82,19 @@
         };
         # Packages
         packages = let
-          createPackage = file: _type: {
-            name = lib.strings.removeSuffix ".nix" (builtins.baseNameOf file);
-            value = pkgs.callPackage ./nix/packages/${file} {inherit rustPlatform rustToolchain;};
+          mkPackage = package: {
+            name = package;
+            value = pkgs.callPackage ./nix/packages/package-template.nix {inherit rustPlatform rustToolchain package;};
           };
+          members = (lib.trivial.importTOML ./Cargo.toml).workspace.members;
+          notBlacklisted = member: !(builtins.elem member ["aoc-utils"]);
+          dayMembers = builtins.filter notBlacklisted members;
         in
-          lib.attrsets.mapAttrs' createPackage (builtins.readDir ./nix/packages);
+          (builtins.listToAttrs (builtins.map mkPackage dayMembers))
+          // {
+            init-new-day = pkgs.callPackage ./nix/packages/init-new-day.nix {inherit rustPlatform rustToolchain;};
+            perf = pkgs.callPackage ./nix/packages/perf.nix {inherit rustPlatform rustToolchain;};
+          };
         # Shell
         devShells.default = pkgs.mkShell {
           name = "dev";
@@ -101,6 +108,7 @@
             pkgs.nil
             pkgs.hyperfine
             pkgs.cargo-flamegraph
+            pkgs.lldb
             self'.packages.init-new-day
             self'.packages.perf
           ];
