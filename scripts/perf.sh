@@ -6,7 +6,7 @@ if [ "$#" -ne 1 ]; then
     exit 1
 fi
 
-day=$(printf "%02d" "$1")
+day="$1"
 
 hyperfine \
   --shell=none \
