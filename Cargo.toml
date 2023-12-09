@@ -9,7 +9,5 @@ members = [
   "day-05",
   "day-06",
   "day-07",
-  "day-08"]
-
-[profile.release]
-debug = true
+  "day-08",
+  "day-09"]
