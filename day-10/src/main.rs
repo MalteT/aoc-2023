@@ -41,12 +41,34 @@ impl aoc_utils::Problem<Grid<Pipe>> for Day10 {
         let start = grid
             .find_idx(|&pipe| pipe == Pipe::Start)
             .expect("a starting position");
+        #[cfg(debug_assertions)]
+        eprintln!("{grid}");
         for dir in [North, East, South, West] {
             let just_count = |num, _, _| num + 1;
             let circle_len = match fold_over_circle(&grid, start, dir, 0_usize, just_count) {
                 Some(circle_len) => circle_len,
                 None => continue,
             };
+            #[cfg(debug_assertions)]
+            {
+                use std::collections::HashSet;
+                use yansi::Paint;
+                let assemble_circle = |mut list: HashSet<_>, pos, _| {
+                    list.insert(pos);
+                    list
+                };
+                let circle =
+                    fold_over_circle(&grid, start, dir, HashSet::new(), assemble_circle).unwrap();
+                grid.debug_render(|pos, cell| {
+                    if *cell == Pipe::Start {
+                        Paint::red(format!("{cell}")).bold()
+                    } else if circle.contains(&pos) {
+                        Paint::new(format!("{cell}")).bold()
+                    } else {
+                        Paint::new(format!("{cell}")).dimmed()
+                    }
+                });
+            }
             return Ok(circle_len / 2);
         }
         unreachable!()
@@ -59,6 +81,8 @@ impl aoc_utils::Problem<Grid<Pipe>> for Day10 {
         let start = grid
             .find_idx(|&pipe| pipe == Pipe::Start)
             .expect("a starting position");
+        #[cfg(debug_assertions)]
+        eprintln!("{grid}");
         for dir in [North, East, South, West] {
             let accumulate_circle_map = |mut map: HashMap<_, _>, pos, dir| {
                 map.insert(pos, dir);
@@ -136,7 +160,7 @@ impl aoc_utils::Problem<Grid<Pipe>> for Day10 {
                 use yansi::Paint;
                 fill.debug_render(|pos, cell| {
                     if grid[pos] == Pipe::Start {
-                        Paint::red("s".to_owned())
+                        Paint::red("S".to_owned()).bold()
                     } else if circle.contains_key(&pos) {
                         Paint::new(format!("{}", grid[pos])).bold()
                     } else if Some(cell) == outside_type {
