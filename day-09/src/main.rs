@@ -87,4 +87,4 @@ fn find_previous_in_sequence(readings: Vec<Num>) -> Result<Num> {
     Ok(solution)
 }
 
-aoc_utils::main!(Day09, Lines, "inputs-09-test" => 114, "inputs-09-test" => 2);
+aoc_utils::main!(Day09, "inputs-09-test" => 114, "inputs-09-test" => 2);

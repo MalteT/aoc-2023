@@ -83,4 +83,4 @@ fn distance(hold: usize, total_time: usize) -> usize {
     hold * (total_time.saturating_sub(hold))
 }
 
-aoc_utils::main!(Day06, Lines, "inputs-06-test" => 288, "inputs-06-test" => 71503);
+aoc_utils::main!(Day06, "inputs-06-test" => 288, "inputs-06-test" => 71503);

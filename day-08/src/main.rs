@@ -157,4 +157,4 @@ impl Iterator for Directions {
     }
 }
 
-aoc_utils::main!(Day08, Lines, "inputs-08-test-first" => 6, "inputs-08-test-second" => 6);
+aoc_utils::main!(Day08, "inputs-08-test-first" => 6, "inputs-08-test-second" => 6);

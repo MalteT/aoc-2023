@@ -182,4 +182,4 @@ fn parse_seed_line_helper(input: &str) -> Result<impl Iterator<Item = Result<usi
         .map(|raw| str::parse(raw).map_err(Error::from)))
 }
 
-aoc_utils::main!(Day05, Lines, "inputs-05-test" => 35, "inputs-05-test" => 46);
+aoc_utils::main!(Day05, "inputs-05-test" => 35, "inputs-05-test" => 46);

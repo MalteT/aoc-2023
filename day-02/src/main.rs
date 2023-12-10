@@ -95,4 +95,4 @@ impl Bag {
     }
 }
 
-main!(Day02, Lines, "inputs-02-test" => 8, "inputs-02-test" => 2286);
+main!(Day02, "inputs-02-test" => 8, "inputs-02-test" => 2286);

@@ -190,7 +190,7 @@ fn calculate_score(hand: Hand, orig: Option<Hand>) -> u32 {
     score
 }
 
-aoc_utils::main!(Day07, Lines, "inputs-07-test" => 6440, "inputs-07-test" => 5905);
+aoc_utils::main!(Day07, "inputs-07-test" => 6440, "inputs-07-test" => 5905);
 
 #[cfg(test)]
 mod tests {

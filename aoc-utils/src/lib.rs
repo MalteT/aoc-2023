@@ -4,37 +4,41 @@ use std::{
     num::ParseIntError,
 };
 
+use thiserror::Error;
+
 #[macro_export]
 macro_rules! main {
-    ($problem:ident, $input:ident, $first_test_file:literal => $first_test_result:expr, $second_test_file:literal => $second_test_result:expr) => {
+    ($problem:ident, $first_test_file:literal => $first_test_result:expr, $second_test_file:literal => $second_test_result:expr) => {
         fn main() -> aoc_utils::Result {
-            <$problem as aoc_utils::Problem<aoc_utils::$input>>::run_with_input_output()
+            use aoc_utils::Problem;
+            $problem::run_with_input_output()
         }
 
         #[test]
         fn test_input_works() -> aoc_utils::Result {
+            use aoc_utils::Problem;
             // First
             let file: &str = $first_test_file;
             let path = String::from("../inputs/") + file;
             let args = aoc_utils::Args::from_raw(aoc_utils::Variant::First, path);
-            let exp: <$problem as aoc_utils::Problem<aoc_utils::$input>>::Solution =
-                $first_test_result;
-            let solution = <$problem as aoc_utils::Problem<aoc_utils::$input>>::solve(args);
+            let exp = $first_test_result;
+            let solution = $problem::solve(args);
             assert_eq!(exp, solution?);
             // Second
             let file: &str = $second_test_file;
             let path = String::from("../inputs/") + file;
             let args = aoc_utils::Args::from_raw(aoc_utils::Variant::Second, path);
-            let exp: <$problem as aoc_utils::Problem<aoc_utils::$input>>::Solution =
-                $second_test_result;
-            let solution = <$problem as aoc_utils::Problem<aoc_utils::$input>>::solve(args);
+            let exp = $second_test_result;
+            let solution = $problem::solve(args);
             assert_eq!(exp, solution?);
             Ok(())
         }
     };
 }
 
-use thiserror::Error;
+mod grid;
+
+pub use grid::Grid;
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -154,5 +158,11 @@ impl Input for Bytes {
         let file = File::open(args.file)?;
         let reader = BufReader::new(file);
         Ok(std::io::Read::bytes(reader))
+    }
+}
+
+impl From<std::convert::Infallible> for Error {
+    fn from(_: std::convert::Infallible) -> Self {
+        unreachable!()
     }
 }

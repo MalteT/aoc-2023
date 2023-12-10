@@ -286,4 +286,4 @@ fn fold_entries_around_gears(mut acc: GearAcc, token: Result<Token>) -> Result<G
     }
 }
 
-aoc_utils::main!(Day03, Bytes, "inputs-03-test" => 4361, "inputs-03-test" => 467835);
+aoc_utils::main!(Day03, "inputs-03-test" => 4361, "inputs-03-test" => 467835);

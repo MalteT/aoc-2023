@@ -87,4 +87,4 @@ impl aoc_utils::Problem<Lines> for Day04 {
     }
 }
 
-aoc_utils::main!(Day04, Lines, "inputs-04-test" => 13, "inputs-04-test" => 30);
+aoc_utils::main!(Day04, "inputs-04-test" => 13, "inputs-04-test" => 30);

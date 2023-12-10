@@ -378,4 +378,4 @@ mod tests {
     }
 }
 
-main!(Day01, Lines, "inputs-01-test-first" => 142, "inputs-01-test-second" => 281);
+main!(Day01, "inputs-01-test-first" => 142, "inputs-01-test-second" => 281);
