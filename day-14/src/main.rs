@@ -2,9 +2,9 @@ use std::collections::HashMap;
 
 use aoc_utils::Lines;
 
-struct DayXX;
+struct Day14;
 
-impl aoc_utils::Problem<Lines> for DayXX {
+impl aoc_utils::Problem<Lines> for Day14 {
     type Solution = usize;
 
     fn solve_first(input: Lines) -> aoc_utils::Result<Self::Solution> {
@@ -156,4 +156,4 @@ fn tilt_east(lines: &mut [Vec<u8>]) {
     }
 }
 
-aoc_utils::main!(DayXX, "inputs-14-test" => 136, "inputs-14-test" => 64);
+aoc_utils::main!(Day14, "inputs-14-test" => 136, "inputs-14-test" => 64);
