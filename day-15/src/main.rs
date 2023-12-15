@@ -23,7 +23,7 @@ impl std::hash::Hasher for Hasher {
 
 #[derive(Debug)]
 struct HashMap<'s> {
-    boxes: [Vec<(&'s str, u8)>; u8::MAX as usize + 1],
+    boxes: Vec<Vec<(&'s str, u8)>>,
 }
 
 enum Action<'s> {
@@ -118,7 +118,7 @@ impl aoc_utils::Problem<Lines> for Day15 {
 impl<'s> Default for HashMap<'s> {
     fn default() -> Self {
         Self {
-            boxes: [(); 256].map(|_| vec![]),
+            boxes: vec![vec![]; 256],
         }
     }
 }
