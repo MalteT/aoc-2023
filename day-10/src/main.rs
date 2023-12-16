@@ -1,6 +1,6 @@
 use std::collections::HashMap;
 
-use aoc_utils::Grid;
+use aoc_utils::{Grid, Idx2D};
 
 struct Day10;
 
@@ -119,7 +119,7 @@ impl aoc_utils::Problem<Grid<Pipe>> for Day10 {
                     _ => &[],
                 };
                 for (dir, conn) in instructions {
-                    if let Some(pos) = walk(&grid, (*x, *y), *dir) {
+                    if let Some(pos) = grid.walk((*x, *y), *dir) {
                         if !circle.contains_key(&pos) {
                             fill[pos] = *conn;
                             fill_queue.push(pos);
@@ -130,7 +130,7 @@ impl aoc_utils::Problem<Grid<Pipe>> for Day10 {
             while let Some(curr_pos) = fill_queue.pop() {
                 [North, East, South, West]
                     .into_iter()
-                    .flat_map(|dir| walk(&grid, curr_pos, dir))
+                    .flat_map(|dir| grid.walk(curr_pos, dir))
                     .for_each(|next_pos| {
                         if fill[next_pos] == Undecided && !circle.contains_key(&next_pos) {
                             fill[next_pos] = fill[curr_pos];
@@ -193,7 +193,7 @@ where
 {
     let mut last_dir = dir;
     let mut circle = init;
-    let mut curr = match walk(grid, start, dir) {
+    let mut curr = match grid.walk(start, dir) {
         Some(pos) => pos,
         None => return None,
     };
@@ -202,20 +202,9 @@ where
         let dir = grid[curr].steer(last_dir.invert())?;
         circle = acc(circle, curr, dir);
         last_dir = dir;
-        curr = walk(grid, curr, dir)?;
+        curr = grid.walk(curr, dir)?;
     }
     Some(circle)
-}
-
-fn walk<T>(grid: &Grid<T>, (x, y): (usize, usize), dir: Direction) -> Option<(usize, usize)> {
-    use Direction::*;
-    match dir {
-        North if y > 0 => Some((x, y - 1)),
-        East if x + 1 < grid.width() => Some((x + 1, y)),
-        South if y + 1 < grid.height() => Some((x, y + 1)),
-        West if x > 0 => Some((x - 1, y)),
-        _ => None,
-    }
 }
 
 impl Pipe {
@@ -297,6 +286,17 @@ impl std::fmt::Display for Connectivity {
                 Connectivity::Circle => 'o',
             }
         )
+    }
+}
+
+impl From<Direction> for Idx2D<isize> {
+    fn from(value: Direction) -> Self {
+        match value {
+            Direction::North => (0, -1),
+            Direction::East => (1, 0),
+            Direction::South => (0, 1),
+            Direction::West => (-1, 0),
+        }
     }
 }
 

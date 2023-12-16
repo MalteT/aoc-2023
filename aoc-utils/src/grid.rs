@@ -2,6 +2,8 @@ use std::{fs::File, io::BufReader};
 
 use crate::{Args, Error, Input};
 
+pub type Idx2D<T = usize> = (T, T);
+
 #[derive(Clone)]
 pub struct Grid<T> {
     inner: Vec<T>,
@@ -17,7 +19,7 @@ impl<T> Grid<T> {
         self.width
     }
 
-    pub fn find_idx<F>(&self, f: F) -> Option<(usize, usize)>
+    pub fn find_idx<F>(&self, f: F) -> Option<Idx2D>
     where
         F: Fn(&T) -> bool,
     {
@@ -36,7 +38,7 @@ impl<T> Grid<T> {
 
     pub fn debug_render<F, S>(&self, mut f: F)
     where
-        F: FnMut((usize, usize), &T) -> S,
+        F: FnMut(Idx2D, &T) -> S,
         S: std::fmt::Display,
     {
         for (idx, elem) in self.inner.iter().enumerate() {
@@ -48,7 +50,7 @@ impl<T> Grid<T> {
         eprintln!();
     }
 
-    pub fn iter_pos(&self) -> impl Iterator<Item = ((usize, usize), &T)> {
+    pub fn iter_pos(&self) -> impl Iterator<Item = (Idx2D, &T)> {
         self.inner
             .iter()
             .enumerate()
@@ -57,7 +59,7 @@ impl<T> Grid<T> {
 
     pub fn clone_with_fn<S, F>(&self, mut map: F) -> Grid<S>
     where
-        F: FnMut((usize, usize), &T) -> S,
+        F: FnMut(Idx2D, &T) -> S,
     {
         Grid {
             width: self.width,
@@ -72,11 +74,32 @@ impl<T> Grid<T> {
         }
     }
 
-    fn pos_to_idx(&self, (x, y): (usize, usize)) -> usize {
+    pub fn walk<D: Into<Idx2D<isize>>>(&self, (x, y): Idx2D, dir: D) -> Option<Idx2D> {
+        let (x_off, y_off) = dir.into();
+        let x_off_abs = x_off.unsigned_abs();
+        let y_off_abs = y_off.unsigned_abs();
+        match (x_off >= 0, y_off >= 0) {
+            (true, true) if x + x_off_abs < self.width && y + y_off_abs < self.height() => {
+                Some((x + x_off_abs, y + y_off_abs))
+            }
+            (true, false) if x + x_off_abs < self.width && y >= y_off_abs => {
+                Some((x + x_off_abs, y - y_off_abs))
+            }
+            (false, true) if x >= x_off_abs && y + y_off_abs < self.height() => {
+                Some((x - x_off_abs, y + y_off_abs))
+            }
+            (false, false) if x >= x_off_abs && y >= y_off_abs => {
+                Some((x - x_off_abs, y - y_off_abs))
+            }
+            _ => None,
+        }
+    }
+
+    fn pos_to_idx(&self, (x, y): Idx2D) -> usize {
         x + y * self.width
     }
 
-    fn idx_to_pos(&self, raw: usize) -> (usize, usize) {
+    fn idx_to_pos(&self, raw: usize) -> Idx2D {
         (raw % self.width, raw / self.width)
     }
 }
@@ -135,16 +158,16 @@ impl<T: std::fmt::Debug> std::fmt::Debug for Grid<T> {
     }
 }
 
-impl<T> std::ops::Index<(usize, usize)> for Grid<T> {
+impl<T> std::ops::Index<Idx2D> for Grid<T> {
     type Output = T;
 
-    fn index(&self, index: (usize, usize)) -> &Self::Output {
+    fn index(&self, index: Idx2D) -> &Self::Output {
         &self.inner[self.pos_to_idx(index)]
     }
 }
 
-impl<T> std::ops::IndexMut<(usize, usize)> for Grid<T> {
-    fn index_mut(&mut self, index: (usize, usize)) -> &mut Self::Output {
+impl<T> std::ops::IndexMut<Idx2D> for Grid<T> {
+    fn index_mut(&mut self, index: Idx2D) -> &mut Self::Output {
         let idx = self.pos_to_idx(index);
         &mut self.inner[idx]
     }

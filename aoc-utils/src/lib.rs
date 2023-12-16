@@ -38,7 +38,7 @@ macro_rules! main {
 
 mod grid;
 
-pub use grid::Grid;
+pub use grid::{Grid, Idx2D};
 
 #[derive(Debug, Error)]
 pub enum Error {
