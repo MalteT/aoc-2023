@@ -1,8 +1,4 @@
-use std::{
-    fs::File,
-    io::{BufRead, BufReader},
-    num::ParseIntError,
-};
+use std::{fs::File, io::BufReader, num::ParseIntError};
 
 use thiserror::Error;
 
@@ -37,8 +33,10 @@ macro_rules! main {
 }
 
 mod grid;
+mod lines;
 
 pub use grid::{Grid, Idx2D};
+pub use lines::{InputLine, Lines};
 
 #[derive(Debug, Error)]
 pub enum Error {
@@ -112,38 +110,9 @@ impl Args {
     }
 }
 
-pub enum Lines {
-    Stdin(std::io::Lines<std::io::StdinLock<'static>>),
-    File(std::io::Lines<BufReader<File>>),
-}
-
 pub enum Variant {
     First,
     Second,
-}
-
-impl Iterator for Lines {
-    type Item = std::io::Result<String>;
-
-    fn next(&mut self) -> Option<Self::Item> {
-        match self {
-            Lines::Stdin(lines) => Iterator::next(lines),
-            Lines::File(lines) => Iterator::next(lines),
-        }
-    }
-}
-
-impl Input for Lines {
-    fn from_args(args: Args) -> Result<Self> {
-        if args.file == "-" {
-            let stdin = std::io::stdin();
-            Ok(Lines::Stdin(stdin.lines()))
-        } else {
-            let file = File::open(args.file)?;
-            let reader = BufReader::new(file).lines();
-            Ok(Lines::File(reader))
-        }
-    }
 }
 
 impl Input for Args {
