@@ -57,3 +57,25 @@ where
         }
     }
 }
+
+pub struct RawLine(pub String);
+
+impl RawLine {
+    pub fn into_inner(self) -> String {
+        self.0
+    }
+}
+
+impl From<InputLine> for RawLine {
+    fn from(line: InputLine) -> Self {
+        RawLine(line.expect("Error in input, line not readable"))
+    }
+}
+
+impl std::ops::Deref for RawLine {
+    type Target = String;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}

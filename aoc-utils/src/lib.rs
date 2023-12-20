@@ -36,7 +36,7 @@ mod grid;
 mod lines;
 
 pub use grid::{Grid, Idx2D};
-pub use lines::{InputLine, Lines};
+pub use lines::{InputLine, Lines, RawLine};
 
 #[derive(Debug, Error)]
 pub enum Error {
