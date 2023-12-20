@@ -130,4 +130,4 @@ impl From<Direction> for Idx2D<isize> {
     }
 }
 
-aoc_utils::main!(Day17, "inputs-xx" => 0, "inputs-xx" => 0);
+aoc_utils::main!(Day17, "inputs-17-test" => 0, "inputs-17-test" => 0);
