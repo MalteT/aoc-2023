@@ -72,9 +72,7 @@ impl aoc_utils::Problem<Lines<RawLine>> for Day19 {
             aerodynamic: 1..4001,
             shiny: 1..4001,
         };
-        eprintln!("{automaton:#?}");
         let score = automaton.break_up(part).into_iter().fold(0, |sum, part| {
-            eprintln!("{part:?}");
             sum + part.cool_looking.count()
                 * part.musical.count()
                 * part.aerodynamic.count()
@@ -132,28 +130,28 @@ impl Rule {
                         ),
                         Ordering::Greater => (
                             Some(PartRange {
-                                $attr: *rhs..range.end,
+                                $attr: *rhs + 1..range.end,
                                 ..part.clone()
                             }),
                             Some(PartRange {
-                                $attr: range.start..*rhs,
+                                $attr: range.start..*rhs + 1,
                                 ..part.clone()
                             }),
                         ),
                         Ordering::Equal => unreachable!(),
                     }
                 } else if range.start > *rhs {
-                    // Splitter is to the right of our range
+                    // Splitter is to the left of our range
                     match ineq {
-                        Ordering::Less => (Some(part), None),
-                        Ordering::Greater => (None, Some(part)),
+                        Ordering::Greater => (Some(part), None),
+                        Ordering::Less => (None, Some(part)),
                         Ordering::Equal => unreachable!(),
                     }
                 } else {
-                    // Splitter is to the left of our range
+                    // Splitter is to the right of our range
                     match ineq {
-                        Ordering::Less => (None, Some(part)),
-                        Ordering::Greater => (Some(part), None),
+                        Ordering::Greater => (None, Some(part)),
+                        Ordering::Less => (Some(part), None),
                         Ordering::Equal => unreachable!(),
                     }
                 }
