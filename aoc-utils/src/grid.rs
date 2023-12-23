@@ -95,6 +95,14 @@ impl<T> Grid<T> {
         }
     }
 
+    pub fn col(&self, x: usize) -> impl Iterator<Item = (Idx2D, &T)> + '_ {
+        (0..self.height()).map(move |y| ((x, y), &self[(x, y)]))
+    }
+
+    pub fn row(&self, y: usize) -> impl Iterator<Item = (Idx2D, &T)> + '_ {
+        (0..self.width()).map(move |x| ((x, y), &self[(x, y)]))
+    }
+
     fn pos_to_idx(&self, (x, y): Idx2D) -> usize {
         x + y * self.width
     }

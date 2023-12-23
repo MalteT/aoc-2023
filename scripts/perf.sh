@@ -15,6 +15,4 @@ hyperfine \
   --command-name "day-$day first" \
   "./result/bin/day-$day inputs/inputs-$day first" \
   --command-name "day-$day second" \
-  "./result/bin/day-$day inputs/inputs-$day second" \
-  2>/dev/null
-
+  "./result/bin/day-$day inputs/inputs-$day second"
